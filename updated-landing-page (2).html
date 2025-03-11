@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEDNESS - Medicina Eficiente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Blinker:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset e Estilos Básicos */
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Blinker',sans-serif}
+        body{margin:0;padding:0;overflow-x:hidden;background-color:#0a0a0a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column}
+        canvas{display:block;position:fixed;top:0;left:0;z-index:-1;width:100%;height:100%}
+
+        /* Classes Comum para Efeito Vidro */
+        .glass{background:rgba(40,40,40,0.2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.3),inset 0 0 20px rgba(255,255,255,0.05)}
+        .glass-light{background:rgba(180,180,180,0.15);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,0.3)}
+        .glass-reflection{position:absolute;top:0;left:0;width:100%;height:40%;background:linear-gradient(to bottom,rgba(255,255,255,0.1) 0%,rgba(255,255,255,0) 100%);border-radius:inherit;pointer-events:none;z-index:1}
+
+        /* Layout Principal */
+        .container{width:100%;height:100vh;display:flex;flex-direction:column;padding:2rem}
+        .navbar{display:flex;justify-content:space-between;align-items:center;width:100%;padding:1rem 0}
+        .logo{font-size:1.8rem;font-weight:600;letter-spacing:2px;color:#a0a0a0}
+        
+        /* Botões */
+        .btn{background-color:rgba(255,255,255,0.1);backdrop-filter:blur(10px);color:#e0e0e0;padding:0.8rem 1.8rem;border-radius:30px;font-size:0.9rem;cursor:pointer;transition:all 0.3s ease;font-weight:400;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.2)}
+        .btn:hover{background-color:rgba(255,255,255,0.2);transform:translateY(-2px);box-shadow:0 6px 25px rgba(0,0,0,0.3)}
+        .btn-primary{background:rgba(160,160,160,0.3);color:#fff;padding:0.9rem 2.8rem;font-size:1rem;font-weight:600;letter-spacing:1px;backdrop-filter:blur(15px)}
+        .btn-primary:hover{background:rgba(180,180,180,0.4)}
+        .btn-secondary{background:transparent;border-color:rgba(120,120,120,0.4);color:#d0d0d0;backdrop-filter:blur(8px)}
+        .btn-secondary:hover{background:rgba(255,255,255,0.1);border-color:rgba(160,160,160,0.5)}
+        
+        /* Seção Hero */
+        .hero{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;max-width:800px;margin:0 auto;position:relative}
+        .main-title-container{position:relative;margin-bottom:1rem;overflow:hidden}
+        .main-title{font-family:'Blinker',sans-serif;font-size:9rem;font-weight:700;letter-spacing:1px;position:relative;text-transform:uppercase;color:rgba(255,255,255,0.15);background:linear-gradient(135deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.1) 100%);-webkit-background-clip:text;background-clip:text;text-shadow:0 0 1px rgba(255,255,255,0.5),0 0 30px rgba(255,255,255,0.2);transform-style:preserve-3d;transform:perspective(500px) rotateX(5deg)}
+        .glass-reflection{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(255,255,255,0.3) 0%,rgba(255,255,255,0.1) 30%,rgba(255,255,255,0) 100%);pointer-events:none;opacity:0.5;border-radius:10px;mix-blend-mode:overlay;transform:translateZ(5px)}
+        .mouse-highlight{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.8) 0%,rgba(255,255,255,0) 70%);mix-blend-mode:overlay;pointer-events:none;opacity:0;z-index:3;transition:opacity 0.2s ease}
+        .subtitle{font-family:'Blinker',sans-serif;font-size:1.3rem;font-weight:300;margin-bottom:2.5rem;max-width:600px;line-height:1.5;color:#b0b0b0;position:relative;z-index:2}
+        .buttons-container{display:flex;flex-direction:column;align-items:center;gap:1rem;position:relative;z-index:2}
+
+        /* Seção do Copiloto e Conteúdo */
+        .copiloto-section{width:100%;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:4rem 2rem;position:relative}
+        .glass-container{background:rgba(20,20,20,0.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.5);padding:3rem;width:100%;max-width:800px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+        .glass-container::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.3) 50%,rgba(255,255,255,0) 100%)}
+        .section-title{font-family:'Blinker',sans-serif;font-size:4rem;font-weight:700;letter-spacing:1px;margin-bottom:3rem;color:rgba(255,255,255,0.15);background:linear-gradient(135deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.1) 100%);-webkit-background-clip:text;background-clip:text;text-shadow:0 0 1px rgba(255,255,255,0.5),0 0 30px rgba(255,255,255,0.2);transform-style:preserve-3d;transform:perspective(500px) rotateX(5deg);position:relative;text-align:center;width:100%}
+        .copiloto-container{display:flex;flex-direction:column;align-items:center;max-width:800px;width:100%;margin:0 auto}
+        .copiloto-content{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%}
+        .copiloto-description{font-family:'Blinker',sans-serif;font-size:1.3rem;font-weight:300;max-width:600px;line-height:1.6;color:#b0b0b0;position:relative;z-index:2;text-align:center;margin-top:2rem;padding:0 1rem;width:100%}
+
+        /* Estilos do Robô */
+        .scene,.robot-scene,.clock-scene,.chat-scene,.gear-scene,.portal-scene{position:relative;width:280px;height:280px;transform-style:preserve-3d;animation:float 4s ease-in-out infinite;margin-bottom:20px}
+        .scene{width:240px;height:320px}
+        .robot{position:absolute;width:160px;height:224px;top:48px;left:40px;transform-style:preserve-3d}
+        .robot-carrying{position:absolute;width:160px;height:220px;top:40px;left:60px;transform-style:preserve-3d}
+        .head,.head.straining{position:absolute;width:80px;height:64px;left:40px;top:0;background:rgba(200,200,200,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:12px;box-shadow:0 0 20px rgba(255,255,255,0.3),inset 0 0 20px rgba(255,255,255,0.1);transform-style:preserve-3d;backdrop-filter:blur(5px)}
+        .head.straining{height:65px;transform:rotate(15deg);border-radius:15px}
+        .eye{position:absolute;width:16px;height:16px;border-radius:50%;background:rgba(150,150,150,0.8);box-shadow:0 0 15px rgba(255,255,255,0.8);top:20px}
+        .eye.left{left:20px}
+        .eye.right{right:20px}
+        .head.straining .eye{width:20px;height:7px;border-radius:10px 10px 5px 5px;top:25px}
+        .head.straining .eye.left{left:15px}
+        .head.straining .eye.right{right:15px}
+        .body,.body.tilted{position:absolute;width:112px;height:120px;left:24px;top:80px;background:rgba(180,180,180,0.15);border:1px solid rgba(255,255,255,0.4);border-radius:16px;box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);backdrop-filter:blur(5px)}
+        .body.tilted{width:120px;height:100px;left:20px;transform:rotate(-10deg);border-radius:20px}
+        .panel{position:absolute;width:64px;height:32px;background:rgba(100,100,100,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:4px;left:24px;top:96px}
+        .body.tilted .panel{width:50px;height:30px;left:35px;top:40px;border-radius:5px}
+        .button{position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(200,200,200,0.8);box-shadow:0 0 10px rgba(255,255,255,0.5)}
+        .button-1{top:8px;left:12px}
+        .button-2{top:8px;right:12px}
+        .button-3{bottom:8px;left:12px}
+        .button-4{bottom:8px;right:12px}
+        .arm,.arm.stretched{position:absolute;width:20px;height:80px;background:rgba(160,160,160,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:8px;box-shadow:0 0 10px rgba(255,255,255,0.2);top:96px}
+        .arm.left{left:-8px;transform:rotate(15deg)}
+        .arm.right{right:-8px;transform:rotate(-15deg)}
+        .arm.stretched{height:90px;top:90px;border-radius:10px}
+        .arm.stretched.left{left:15px;transform:rotate(20deg);z-index:4}
+        .arm.stretched.right{right:15px;transform:rotate(-20deg);z-index:4}
+        .leg,.leg.bent{position:absolute;width:28px;height:64px;background:rgba(140,140,140,0.25);border:1px solid rgba(255,255,255,0.35);border-radius:8px;box-shadow:0 0 10px rgba(255,255,255,0.2);top:200px}
+        .leg.left{left:32px}
+        .leg.right{right:32px}
+        .leg.bent{width:22px;height:70px;top:160px;border-radius:10px}
+        .leg.bent.left{left:40px;transform:rotate(10deg)}
+        .leg.bent.right{right:40px;transform:rotate(-10deg)}
+
+        /* Chat Bubbles */
+        .robot .chat-bubble,.chat-bubbles .chat-bubble{position:absolute;background:rgba(220,220,220,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:12px;box-shadow:0 0 20px rgba(255,255,255,0.3);display:flex;justify-content:center;align-items:center;color:rgba(255,255,255,0.8);font-family:'Blinker',sans-serif;font-size:12px;text-align:center;padding:10px;backdrop-filter:blur(5px);transform-style:preserve-3d;z-index:10}
+        .robot .chat-bubble{width:160px;height:auto;min-height:50px;top:-60px;left:-20px;animation:bubble-glow 2s ease-in-out infinite}
+        .robot .chat-bubble:after,.chat-bubbles .chat-bubble::after{content:'';position:absolute;background:inherit;border-right:1px solid rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.5);transform:rotate(45deg)}
+        .robot .chat-bubble:after{bottom:-8px;left:80px;width:16px;height:16px;box-shadow:3px 3px 5px rgba(255,255,255,0.1)}
+        .chat-bubbles{position:absolute;width:100%;height:100%;top:0;left:0;transform-style:preserve-3d}
+        .chat-bubbles .chat-bubble{height:auto;min-height:60px;padding:15px;transition:transform 0.3s ease}
+        .chat-bubbles .chat-bubble::before{content:'';position:absolute;top:0;left:0;width:100%;height:50%;background:linear-gradient(to bottom,rgba(255,255,255,0.15) 0%,rgba(255,255,255,0) 100%);pointer-events:none;border-radius:20px 20px 0 0}
+        .chat-bubbles .chat-bubble::after{width:20px;height:20px;box-shadow:5px 5px 10px rgba(0,0,0,0.1)}
+        .chat-bubbles .user-bubble{width:160px;left:0;top:50px;animation:bubble-pulse-1 3s infinite;z-index:1}
+        .chat-bubbles .user-bubble::after{bottom:-9px;left:25px}
+        .chat-bubbles .ai-bubble{width:210px;right:0;top:150px;animation:bubble-pulse-2 3s infinite;animation-delay:1.5s;z-index:2}
+        .chat-bubbles .ai-bubble::after{bottom:-9px;right:25px}
+        .bubble-content{color:rgba(255,255,255,0.9);font-family:'Blinker',sans-serif;font-size:13px;line-height:1.4;text-align:center;width:100%}
+
+        /* Relógio */
+        .clock{position:absolute;width:200px;height:200px;top:40px;left:40px;transform-style:preserve-3d}
+        .clock-face{position:relative;width:100%;height:100%;border-radius:50%;background:rgba(30,30,30,0.2);border:1px solid rgba(255,255,255,0.3);box-shadow:0 0 30px rgba(255,255,255,0.15),inset 0 0 30px rgba(255,255,255,0.05);transform-style:preserve-3d;backdrop-filter:blur(5px)}
+        .clock-hour-marks,.clock-hands{position:absolute;width:100%;height:100%;top:0;left:0}
+        .clock-hands{transform-style:preserve-3d}
+        .hour-mark{position:absolute;width:4px;height:12px;background:rgba(255,255,255,0.7);border-radius:2px;top:5px;left:50%;margin-left:-2px;transform-origin:50% 95px}
+        .hour-mark-small{width:2px;height:6px;background:rgba(255,255,255,0.4);margin-left:-1px;transform-origin:50% 97px}
+        .hand{position:absolute;background:rgba(255,255,255,0.8);border-radius:4px;transform-origin:50% bottom;left:50%;box-shadow:0 0 10px rgba(255,255,255,0.2)}
+        .hour-hand{width:6px;height:60px;margin-left:-3px;top:40px;background:linear-gradient(to top,rgba(255,255,255,0.8),rgba(200,200,200,0.6));z-index:2}
+        .minute-hand{width:4px;height:80px;margin-left:-2px;top:20px;background:linear-gradient(to top,rgba(255,255,255,0.9),rgba(220,220,220,0.7));z-index:3}
+        .second-hand{width:2px;height:90px;margin-left:-1px;top:10px;background:rgba(200,200,200,0.8);z-index:4}
+        .clock-center{position:absolute;width:12px;height:12px;background:rgba(255,255,255,0.9);border-radius:50%;top:50%;left:50%;margin-top:-6px;margin-left:-6px;box-shadow:0 0 10px rgba(255,255,255,0.5);z-index:5}
+        .clock-reflection{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.05) 50%,rgba(255,255,255,0) 100%);pointer-events:none;z-index:6}
+
+        /* Caixa Pesada */
+        .heavy-box{position:absolute;width:100px;height:80px;bottom:30px;left:30px;background:rgba(100,100,100,0.3);border:1px solid rgba(255,255,255,0.3);border-radius:8px;box-shadow:0 0 20px rgba(0,0,0,0.4),inset 0 0 10px rgba(255,255,255,0.1);transform-style:preserve-3d;backdrop-filter:blur(5px);z-index:3;animation:heavyShake 1.5s ease-in-out infinite}
+        .box-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.7);font-family:'Blinker',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px}
+
+        /* Engrenagens */
+        .gear-container{position:absolute;width:220px;height:220px;top:30px;left:30px;transform-style:preserve-3d;transform:perspective(500px) rotateX(15deg);animation:gearFloat 6s ease-in-out infinite}
+        .gear{position:absolute;border-radius:50%;background:rgba(160,160,160,0.15);border:1px solid rgba(255,255,255,0.3);box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);backdrop-filter:blur(5px);transform-style:preserve-3d;z-index:2}
+        .gear.large{width:160px;height:160px;top:30px;left:30px;animation:rotateGearLarge 20s linear infinite}
+        .gear.small{width:90px;height:90px;top:110px;left:130px;animation:rotateGearSmall 12s linear infinite reverse;z-index:3}
+        .gear-center{position:absolute;border-radius:50%;background:rgba(100,100,100,0.3);border:1px solid rgba(255,255,255,0.2);box-shadow:0 0 15px rgba(255,255,255,0.1),inset 0 0 10px rgba(0,0,0,0.2);z-index:4}
+        .gear-center.large{width:40px;height:40px;top:50%;left:50%;margin-top:-20px;margin-left:-20px}
+        .gear-center.small{width:26px;height:26px;top:50%;left:50%;margin-top:-13px;margin-left:-13px}
+        .gear-screw{position:absolute;background:rgba(180,180,180,0.4);border:1px solid rgba(255,255,255,0.3);border-radius:50%;box-shadow:inset 0 0 3px rgba(0,0,0,0.3);z-index:5}
+        .gear-screw.large{width:8px;height:8px}
+        .gear-screw.small{width:5px;height:5px}
+        .screw-1.large{top:8px;left:16px}
+        .screw-2.large{top:16px;right:8px}
+        .screw-3.large{bottom:8px;right:16px}
+        .screw-4.large{bottom:16px;left:8px}
+        .screw-1.small{top:5px;left:10px}
+        .screw-2.small{top:10px;right:5px}
+        .screw-3.small{bottom:5px;right:10px}
+        .screw-4.small{bottom:10px;left:5px}
+        .gear-teeth-container{position:absolute;width:100%;height:100%;top:0;left:0;transform-style:preserve-3d}
+        .gear-tooth{position:absolute;background:rgba(150,150,150,0.2);border:1px solid rgba(255,255,255,0.25);box-shadow:0 0 10px rgba(255,255,255,0.1),inset 0 0 8px rgba(0,0,0,0.2);transform-origin:center center}
+        .gear-tooth.large{width:24px;height:24px}
+        .gear-tooth.small{width:16px;height:16px}
+        .gear::after{content:'';position:absolute;top:0;left:0;width:100%;height:40%;background:linear-gradient(to bottom,rgba(255,255,255,0.20) 0%,rgba(255,255,255,0) 100%);pointer-events:none;border-radius:50% 50% 0 0;z-index:5}
+
+        /* Citação */
+        .quote-container{position:relative;width:100%;max-width:600px;transform-style:preserve-3d;margin:0 auto}
+        .quote-box{position:relative;background:rgba(40,40,40,0.2);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,0.3),inset 0 0 20px rgba(255,255,255,0.05);backdrop-filter:blur(10px);transform-style:preserve-3d;transition:transform 0.5s ease;animation:quote-float 6s ease-in-out infinite}
+        .quote-content{font-family:'Blinker',sans-serif;font-size:1.5rem;font-weight:300;line-height:1.5;color:rgba(255,255,255,0.9);text-align:center;position:relative;margin-bottom:20px}
+        .quote-marks{position:absolute;font-family:'Blinker',sans-serif;font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);line-height:0}
+        .quote-open{top:0;left:-15px}
+        .quote-close{bottom:-20px;right:-15px}
+        .quote-author{font-family:'Blinker',sans-serif;font-size:1rem;font-weight:400;color:rgba(255,255,255,0.7);text-align:right}
+        
+        /* Botão Flutuante */
+        .floating-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(160,160,160,0.3);color:#fff;padding:0.9rem 2.8rem;font-size:1rem;font-weight:600;letter-spacing:1px;border-radius:30px;backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,0.2);cursor:pointer;z-index:1000;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s,transform 0.3s ease;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+        .floating-btn:hover{background:rgba(180,180,180,0.4);transform:translateX(-50%) translateY(-2px)}
+
+        /* Portal Section */
+        .portal-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            transform-style: preserve-3d;
+            animation: portalFloat 8s ease-in-out infinite;
+        }
+        .portal-outer {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            top: 30px;
+            left: 30px;
+            border-radius: 50%;
+            background: rgba(60,60,60,0.2);
+            border: 1px solid rgba(180,180,180,0.3);
+            box-shadow: 0 0 30px rgba(160,160,160,0.3), inset 0 0 40px rgba(120,120,120,0.2);
+            transform-style: preserve-3d;
+            overflow: hidden;
+            animation: pulse 4s ease-in-out infinite;
+        }
+        .portal-inner {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            top: 20px;
+            left: 20px;
+            border-radius: 50%;
+            background: rgba(40,40,40,0.4);
+            border: 1px solid rgba(150,150,150,0.4);
+            box-shadow: 0 0 20px rgba(100,100,100,0.4), inset 0 0 30px rgba(100,100,100,0.2);
+            transform-style: preserve-3d;
+            overflow: hidden;
+        }
+        .portal-core {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            top: 20px;
+            left: 20px;
+            border-radius: 50%;
+            background: rgba(30,30,30,0.6);
+            border: 1px solid rgba(120,120,120,0.5);
+            box-shadow: 0 0 25px rgba(100,100,100,0.5), inset 0 0 30px rgba(120,120,120,0.3);
+            transform-style: preserve-3d;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        .portal-energy {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(150,150,150,0.2) 0%, rgba(100,100,100,0.1) 40%, rgba(50,50,50,0) 70%);
+            transform-style: preserve-3d;
+            animation: energyPulse 2s ease-in-out infinite;
+        }
+        .portal-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-style: preserve-3d;
+        }
+        .portal-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(200,200,200,0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(150,150,150,0.8);
+            animation: particleFlow 4s linear infinite;
+        }
+        .portal-beam {
+            position: absolute;
+            width: 1px;
+            height: 100px;
+            background: linear-gradient(to bottom, rgba(150,150,150,0.8), rgba(150,150,150,0));
+            transform-origin: top center;
+            animation: beamRotate 10s linear infinite;
+        }
+        .portal-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(180,180,180,0.4);
+            box-shadow: 0 0 15px rgba(150,150,150,0.3);
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+        .portal-ring-1 {
+            width: 190px;
+            height: 190px;
+            top: 15px;
+            left: 15px;
+            animation-delay: 0s;
+        }
+        .portal-ring-2 {
+            width: 160px;
+            height: 160px;
+            top: 30px;
+            left: 30px;
+            animation-delay: 0.5s;
+        }
+        .portal-ring-3 {
+            width: 130px;
+            height: 130px;
+            top: 45px;
+            left: 45px;
+            animation-delay: 1s;
+        }
+        .portal-stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-style: preserve-3d;
+            animation: rotateStars 20s linear infinite;
+        }
+        .portal-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255,255,255,0.8);
+        }
+
+        /* Formulário de Inscrição */
+        .signup-form {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 2rem;
+            z-index: 10;
+        }
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            font-size: 1rem;
+            background: rgba(40,40,40,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: #e0e0e0;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(180,180,180,0.5);
+            box-shadow: 0 4px 20px rgba(150,150,150,0.2);
+        }
+        .form-label {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            padding: 0 5px;
+            font-size: 0.85rem;
+            background: rgba(20,20,20,0.8);
+            border-radius: 4px;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s ease;
+        }
+        .signup-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: rgba(100,100,100,0.3);
+            border: 1px solid rgba(150,150,150,0.3);
+            border-radius: 12px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .signup-btn:hover {
+            background: rgba(120,120,120,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(120,120,120,0.3);
+        }
+        .signup-privacy {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+        }
+        .modal-content {
+            width: 90%;
+            max-width: 450px;
+            background: rgba(30,30,30,0.6);
+            border: 1px solid rgba(150,150,150,0.2);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            animation: modalAppear 0.3s forwards;
+        }
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(40,40,40,0.4);
+        }
+        .modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .close-modal {
+            font-size: 1.8rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .close-modal:hover {
+            color: rgba(255,255,255,1);
+        }
+        .modal-body {
+            padding: 1.5rem;
+            position: relative;
+        }
+        .modal-form {
+            width: 100%;
+        }
+        
+        /* Loading Animation */
+        .loading-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(150,150,150,0.3);
+            border-radius: 50%;
+            border-top-color: rgba(180,180,180,0.8);
+            animation: spinner 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        .loading-container p {
+            color: rgba(255,255,255,0.8);
+            font-size: 1.1rem;
+        }
+        
+        /* Message Container */
+        .message-container {
+            display: none;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 10px;
+            background: rgba(50,50,50,0.5);
+            border: 1px solid rgba(150,150,150,0.2);
+            animation: fadeIn 0.5s ease;
+        }
+        .message-container p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        @keyframes spinner {
+            to {transform: rotate(360deg);}
+        }
+        
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        
+        @keyframes modalAppear {
+            from {transform: translateY(30px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+
+        /* Features List */
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            width: 100%;
+            max-width: 700px;
+        }
+        .feature-item {
+            flex: 1 1 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(40,40,60,0.2);
+            border: 1px solid rgba(150,150,255,0.2);
+            border-radius: 12px;
+            padding: 1.2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+            background: rgba(50,50,70,0.25);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(80,80,100,0.3);
+            border: 1px solid rgba(150,150,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(50,50,150,0.2);
+        }
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 0.5rem;
+        }
+        .feature-text {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+
+        /* Animações */
+        @keyframes float{0%,100%{transform:translateY(0) rotateY(0)}50%{transform:translateY(-15px) rotateY(10deg)}}
+        @keyframes bubble-glow{0%,100%{box-shadow:0 0 20px rgba(255,255,255,0.3)}50%{box-shadow:0 0 25px rgba(255,255,255,0.5)}}
+        @keyframes twinkle{0%,100%{opacity:0}50%{opacity:1}}
+        @keyframes drip{0%,100%{transform:translateY(0) scale(0.8);opacity:0.4}50%{transform:translateY(15px) scale(1);opacity:0.8}90%{opacity:0}}
+        @keyframes heavyShake{0%,100%{transform:rotate(-1deg) translateY(0)}50%{transform:rotate(1deg) translateY(3px)}}
+        /* Suor do robô */
+        .sweat-drop{position:absolute;width:8px;height:12px;background:rgba(180,220,255,0.4);border-radius:4px 4px 8px 8px;box-shadow:0 0 5px rgba(180,220,255,0.6);animation:drip 3s infinite}
+        .drop1{top:10px;left:15px;animation-delay:0s}
+        .drop2{top:15px;right:20px;animation-delay:1.5s}
+        @keyframes gearFloat{0%,100%{transform:perspective(500px) rotateX(15deg) rotateY(0deg)}50%{transform:perspective(500px) rotateX(20deg) rotateY(5deg)}}
+        @keyframes rotateGearLarge{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes rotateGearSmall{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes bubble-pulse-1{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        @keyframes bubble-pulse-2{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        @keyframes quote-float{0%,100%{transform:translateY(0) rotateX(0deg)}50%{transform:translateY(-10px) rotateX(2deg)}}
+        @keyframes portalFloat{0%,100%{transform:translateY(0) rotateY(0)}50%{transform:translateY(-15px) rotateY(10deg)}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        @keyframes glow{0%{box-shadow:0 0 25px rgba(100,100,100,0.5), inset 0 0 30px rgba(120,120,120,0.3)}100%{box-shadow:0 0 35px rgba(120,120,120,0.7), inset 0 0 40px rgba(140,140,140,0.5)}}
+        @keyframes energyPulse{0%,100%{opacity:0.8;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+        @keyframes particleFlow{0%{transform:translateY(0) translateX(0);opacity:0}50%{opacity:1}100%{transform:translateY(-60px) translateX(20px) rotate(180deg);opacity:0}}
+        @keyframes beamRotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes ringPulse{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:0.8;transform:scale(1.05)}}
+        @keyframes rotateStars{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+        /* Responsividade */
+        @media (max-width:768px){
+            .container{padding:1.5rem}
+            .logo{font-size:1.5rem}
+            .main-title{font-size:7rem}
+            .subtitle{font-size:1.1rem;padding:0 1rem}
+            .section-title{font-size:3rem}
+            .copiloto-section{padding:3rem 1.5rem}
+            .chat-bubbles .ai-bubble{width:190px}
+            .bubble-content{font-size:12px}
+            .robot .chat-bubble{width:140px;left:-10px}
+            .gear-scene,.chat-scene,.clock-scene,.robot-scene,.portal-scene{width:240px;height:240px}
+            .gear-container{width:200px;height:200px}
+            .gear.large{width:140px;height:140px}
+            .gear.small{width:80px;height:80px;top:100px;left:120px}
+            .gear-tooth.large{width:20px;height:20px}
+            .gear-tooth.small{width:14px;height:14px}
+            .quote-content{font-size:1.2rem}
+            .floating-btn{padding:0.7rem 2rem;font-size:0.9rem}
+            .portal-container{width:240px;height:240px}
+            .portal-outer{width:190px;height:190px}
+            .portal-inner{width:150px;height:150px}
+            .portal-core{width:110px;height:110px}
+            .features-list{gap:1rem}
+            .feature-item{padding:1rem}
+        }
+
+        @media (max-width:480px){
+            .container{padding:1rem}
+            .navbar{padding:0.7rem 0}
+            .logo{font-size:1.3rem}
+            .btn{padding:0.5rem 1.2rem;font-size:0.8rem}
+            .main-title{font-size:5.6rem}
+            .subtitle{font-size:1rem;margin-bottom:2rem}
+            .btn-primary{padding:0.7rem 2rem}
+            .section-title{font-size:2.5rem;margin-bottom:2rem}
+            .copiloto-description{font-size:1.1rem}
+            .glass-container{padding:2rem 1rem}
+            .chat-bubbles .user-bubble{width:140px;top:40px}
+            .chat-bubbles .ai-bubble{width:170px;top:140px}
+            .bubble-content{font-size:11px}
+            .robot .chat-bubble{width:130px;font-size:11px;left:-5px}
+            .robot .chat-bubble:after{left:65px}
+            .gear-scene,.chat-scene,.clock-scene,.robot-scene,.portal-scene{width:220px;height:220px}
+            .gear-container{width:180px;height:180px}
+            .gear.large{width:120px;height:120px;top:25px;left:25px}
+            .gear.small{width:70px;height:70px;top:90px;left:100px}
+            .gear-center.large{width:30px;height:30px;margin-top:-15px;margin-left:-15px}
+            .gear-center.small{width:20px;height:20px;margin-top:-10px;margin-left:-10px}
+            .gear-tooth.large{width:18px;height:18px}
+            .gear-tooth.small{width:12px;height:12px}
+            .quote-content{font-size:1rem}
+            .quote-author{font-size:0.9rem}
+            .floating-btn{padding:0.6rem 1.5rem;font-size:0.8rem}
+            .portal-container{width:200px;height:200px}
+            .portal-outer{width:160px;height:160px;top:20px;left:20px}
+            .portal-inner{width:130px;height:130px;top:15px;left:15px}
+            .portal-core{width:100px;height:100px;top:15px;left:15px}
+            .feature-item{flex:1 1 100%}
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <button id="floatingBtn" class="floating-btn">Fazer parte</button>
+    
+    <!-- Modal de Cadastro -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3>Cadastro MEDNESS</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="signupForm" class="modal-form">
+                    <div class="form-group">
+                        <label class="form-label" for="signupEmail">E-mail</label>
+                        <input type="email" id="signupEmail" class="form-input" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="signupPassword">Senha</label>
+                        <input type="password" id="signupPassword" class="form-input" placeholder="Crie uma senha" required>
+                    </div>
+                    <button type="submit" class="signup-btn">Criar conta</button>
+                </form>
+                <div id="signupLoading" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Processando...</p>
+                </div>
+                <div id="signupMessage" class="message-container">
+                    <p>Devido à alta demanda pelo MEDNESS AI não estamos aceitando novos usuários no momento. Informaremos quando nossa capacidade for aumentada. Desculpe-nos pelo transtorno!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Login -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3>Entrar no MEDNESS</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="modal-form">
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">E-mail</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Senha</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Sua senha" required>
+                    </div>
+                    <button type="submit" class="signup-btn">Entrar</button>
+                </form>
+                <div id="loginLoading" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Verificando...</p>
+                </div>
+                <div id="loginMessage" class="message-container">
+                    <p>Usuário não encontrado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <nav class="navbar">
+            <div class="logo">MEDNESS</div>
+            <button class="btn">Faça parte</button>
+        </nav>
+        
+        <div class="hero">
+            <div class="main-title-container">
+                <h1 class="main-title">MEDNESS</h1>
+                <div class="glass-reflection"></div>
+                <div class="mouse-highlight"></div>
+            </div>
+            <p class="subtitle">Medicina eficiente, sua prática mais leve, seu impacto mais presente</p>
+            <div class="buttons-container">
+                <button class="btn btn-primary">Fazer parte</button>
+                <button class="btn btn-secondary">Entrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <section class="copiloto-section">
+        <div class="glass-container">
+            <div class="copiloto-container">
+                <h2 class="section-title">Copiloto Clínico IA</h2>
+                
+                <div class="copiloto-content">
+                    <div class="scene">
+                        <div class="robot">
+                            <div class="head">
+                                <div class="eye left"></div>
+                                <div class="eye right"></div>
+                            </div>
+                            <div class="body">
+                                <div class="panel">
+                                    <div class="button button-1"></div>
+                                    <div class="button button-2"></div>
+                                    <div class="button button-3"></div>
+                                    <div class="button button-4"></div>
+                                </div>
+                            </div>
+                            <div class="arm left"></div>
+                            <div class="arm right"></div>
+                            <div class="leg left"></div>
+                            <div class="leg right"></div>
+                            <div class="chat-bubble">Seu copiloto médico a postos!</div>
+                        </div>
+                    </div>
+                    
+                    <div class="copiloto-description">
+                        <p>Discuta casos, acesse ferramentas, receba insights e muito mais!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="copiloto-section">
+        <div class="glass-container">
+            <div class="copiloto-container">
+                <h2 class="section-title">Eficiencia Médica</h2>
+                
+                <div class="copiloto-content">
+                    <div class="clock-scene">
+                        <div class="clock">
+                            <div class="clock-face">
+                                <div class="clock-hour-marks"></div>
+                                <div class="clock-hands">
+                                    <div class="hand hour-hand"></div>
+                                    <div class="hand minute-hand"></div>
+                                    <div class="hand second-hand"></div>
+                                </div>
+                                <div class="clock-center"></div>
+                            </div>
+                            <div class="clock-reflection"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="copiloto-description">
+                        <p>Reduza o tempo gasto buscando informações.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="copiloto-section">
+        <div class="glass-container">
+            <div class="copiloto-container">
+                <h2 class="section-title">Redução da Sobrecarga</h2>
+                
+                <div class="copiloto-content">
+                    <div class="robot-scene">
+                        <div class="robot-carrying">
+                            <div class="head straining">
+                                <div class="eye left"></div>
+                                <div class="eye right"></div>
+                                <div class="sweat-drop drop1"></div>
+                                <div class="sweat-drop drop2"></div>
+                            </div>
+                            <div class="body tilted">
+                                <div class="panel">
+                                    <div class="button button-1"></div>
+                                    <div class="button button-2"></div>
+                                    <div class="button button-3"></div>
+                                    <div class="button button-4"></div>
+                                </div>
+                            </div>
+                            <div class="arm left stretched"></div>
+                            <div class="arm right stretched"></div>
+                            <div class="leg left bent"></div>
+                            <div class="leg right bent"></div>
+                            <div class="heavy-box">
+                                <div class="box-label">TAREFAS</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="copiloto-description">
+                        <p>1 em cada 3 médicos relata estar sobrecarregado pelo dia a dia da profissão. Nós podemos te ajudar com isso!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="copiloto-section">
+        <div class="glass-container">
+            <div class="copiloto-container">
+                <h2 class="section-title">Interface em Linguagem Natural</h2>
+                
+                <div class="copiloto-content">
+                    <div class="chat-scene">
+                        <div class="chat-bubbles">
+                            <div class="chat-bubble user-bubble">
+                                <div class="bubble-content">Quais os critérios para sepse?</div>
+                            </div>
+                            <div class="chat-bubble ai-bubble">
+                                <div class="bubble-content">Os critérios atuais de sepse (Sepsis-3) incluem suspeita de infecção + ↑ SOFA ≥ 2 pontos. Deseja ver mais detalhes?</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="copiloto-description">
+                        <p>Interaja com a plataforma em forma de conversa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="copiloto-section">
+        <div class="glass-container">
+            <div class="copiloto-container">
+                <h2 class="section-title">Ferramentas</h2>
+                
+                <div class="copiloto-content">
+                    <div class="gear-scene">
+                        <div class="gear-container">
+                            <div class="gear large">
+                                <div class="gear-teeth-container large"></div>
+                                <div class="gear-center large">
+                                    <div class="gear-screw screw-1 large"></div>
+                                    <div class="gear-screw screw-2 large"></div>
+                                    <div class="gear-screw screw-3 large"></div>
+                                    <div class="gear-screw screw-4 large"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gear small">
+                                <div class="gear-teeth-container small"></div>
+                                <div class="gear-center small">
+                                    <div class="gear-screw screw-1 small"></div>
+                                    <div class="gear-screw screw-2 small"></div>
+                                    <div class="gear-screw screw-3 small"></div>
+                                    <div class="gear-screw screw-4 small"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gear-light light1"></div>
+                            <div class="gear-light light2"></div>
+                            <div class="gear-light light3"></div>
+                            <div class="gear-light light4"></div>
+                            <div class="gear-light light5"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="copiloto-description">
+                        <p>Sistemas diagnósticos, fluxogramas e scores acoplados à plataforma.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="copiloto-section">
+        <div class="quote-container">
+            <div class="quote-box">
+                <span class="quote-marks quote-open">"</span>
+                <div class="quote-content">
+                    A máquina não irá substituir ninguém, mas um médico que sabe trabalhar com IA talvez tire o emprego do médico que não sabe
+                </div>
+                <span class="quote-marks quote-close">"</span>
+                <div class="quote-author">Eduardo Lapa, fundador do CardioPapers</div>
+                <div class="quote-reflection"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nova seção de CTA -->
+    <section class="copiloto-section">
+        <div class="glass-container">
+            <div class="copiloto-container">
+                <h2 class="section-title">Junte-se a nós</h2>
+                
+                <div class="copiloto-content">
+                    <div class="portal-scene">
+                        <div class="portal-container">
+                            <div class="portal-outer">
+                                <div class="portal-energy"></div>
+                                <div class="portal-inner">
+                                    <div class="portal-ring portal-ring-1"></div>
+                                    <div class="portal-ring portal-ring-2"></div>
+                                    <div class="portal-ring portal-ring-3"></div>
+                                    <div class="portal-core">
+                                        <div class="portal-stars" id="portalStars"></div>
+                                    </div>
+                                </div>
+                                <div class="portal-particles" id="portalParticles"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="copiloto-description">
+                        <p>Uma nova era da medicina esta chegando! Seja um médico 4.0 você tambem e saia na frente com inteligencia artificial</p>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <button class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 3rem;">Fazer parte</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cache de seletores DOM frequentemente usados
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+        
+        // Configurações otimizadas
+        const config = {
+            particleCount: 90,
+            particleSize: {min: 1.5, max: 3},
+            particleColor: 'rgba(255, 255, 255, 0.8)',
+            lineColor: 'rgba(255, 255, 255, 0.2)',
+            lineDistance: 150,
+            particleSpeed: 0.4,
+            mouseRadius: 150,
+            mouseInteractionStrength: 0.8,
+            pulseSpeed: 0.02,
+            synapseRadius: 2.5,
+            maxConnections: 4,
+            webhookUrl: 'https://bikini98765.app.n8n.cloud/webhook-test/21eafda5-1c3e-464c-a84d-3b0a9cf63b43'
+        };
+        
+        // Redimensionar o canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        let particles = [];
+        const mouse = {x: null, y: null, radius: config.mouseRadius};
+        
+        // Listeners de eventos otimizados
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+            updateGlassEffect(e);
+            updateRobotRotation(e);
+        });
+        
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+            const title = document.querySelector('.main-title');
+            if(title) title.style.transform = 'perspective(1000px) rotateX(5deg) rotateY(0deg)';
+            const highlight = document.querySelector('.mouse-highlight');
+            if(highlight) highlight.style.opacity = 0;
+            const scene = document.querySelector('.scene');
+            if(scene) scene.style.transform = 'rotateY(0deg) rotateX(0deg)';
+        });
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Efeito reflexivo otimizado
+        function updateGlassEffect(event) {
+            const title = document.querySelector('.main-title');
+            const highlight = document.querySelector('.mouse-highlight');
+            if(!title || !highlight) return;
+            
+            const titleRect = title.getBoundingClientRect();
+            const titleCenterX = titleRect.left + titleRect.width/2;
+            const titleCenterY = titleRect.top + titleRect.height/2;
+            const distanceX = event.clientX - titleCenterX;
+            const distanceY = event.clientY - titleCenterY;
+            const rotateY = 5 * (distanceX/window.innerWidth);
+            const rotateX = -5 * (distanceY/window.innerHeight);
+            
+            title.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            
+            const distance = Math.sqrt(distanceX*distanceX + distanceY*distanceY);
+            const maxDistance = Math.max(titleRect.width, titleRect.height) * 1.5;
+            
+            if(distance < maxDistance) {
+                highlight.style.opacity = 1-(distance/maxDistance);
+                highlight.style.left = (event.clientX - titleRect.left - 150) + 'px';
+                highlight.style.top = (event.clientY - titleRect.top - 150) + 'px';
+            } else {
+                highlight.style.opacity = 0;
+            }
+            
+            const sectionTitle = document.querySelector('.section-title');
+            if(sectionTitle && sectionTitle.getBoundingClientRect().top < window.innerHeight) {
+                const titleRotateY = (window.innerWidth/2 - event.pageX)/100;
+                const titleRotateX = (window.innerHeight/2 - event.pageY)/100;
+                sectionTitle.style.transform = `perspective(1000px) rotateX(${5+titleRotateX}deg) rotateY(${titleRotateY}deg)`;
+            }
+        }
+        
+        // Atualização do robô otimizada
+        function updateRobotRotation(event) {
+            const scene = document.querySelector('.scene');
+            if(scene) {
+                const xAxis = (window.innerWidth/2 - event.pageX)/25;
+                const yAxis = (window.innerHeight/2 - event.pageY)/25;
+                scene.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            }
+        }
+        
+        // Classe de partículas otimizada
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * (config.particleSize.max - config.particleSize.min) + config.particleSize.min;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 20) + 1;
+                this.speedX = (Math.random() - 0.5) * config.particleSpeed;
+                this.speedY = (Math.random() - 0.5) * config.particleSpeed;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.connections = 0;
+            }
+            
+            draw() {
+                const pulseSize = this.size + Math.sin(this.pulsePhase) * 0.5;
+                ctx.fillStyle = config.particleColor;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseSize, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+                
+                if(Math.random() < 0.03) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, pulseSize * 1.5, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                    ctx.fill();
+                }
+                
+                this.pulsePhase += config.pulseSpeed;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if(mouse.x !== null && mouse.y !== null) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(distance < mouse.radius) {
+                        const forceDirectionX = dx/distance;
+                        const forceDirectionY = dy/distance;
+                        const force = (mouse.radius - distance)/mouse.radius;
+                        const moderateForce = force*force*0.7 + force*0.3;
+                        
+                        this.x += forceDirectionX * moderateForce * this.density * config.mouseInteractionStrength;
+                        this.y += forceDirectionY * moderateForce * this.density * config.mouseInteractionStrength;
+                    }
+                }
+                
+                if(this.x < 0 || this.x > canvas.width) this.speedX = -this.speedX;
+                if(this.y < 0 || this.y > canvas.height) this.speedY = -this.speedY;
+                
+                this.connections = 0;
+            }
+        }
+        
+        // Inicialização otimizada
+        function init() {
+            particles = [];
+            for(let i = 0; i < config.particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+        
+        // Conexão de partículas otimizada
+        function connect() {
+            for(let a = 0; a < particles.length; a++) {
+                let distances = [];
+                for(let b = 0; b < particles.length; b++) {
+                    if(a !== b) {
+                        const dx = particles[a].x - particles[b].x;
+                        const dy = particles[a].y - particles[b].y;
+                        const distance = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if(distance < config.lineDistance) {
+                            distances.push({index: b, distance: distance});
+                        }
+                    }
+                }
+                
+                distances.sort((a, b) => a.distance - b.distance);
+                
+                const connectCount = Math.min(distances.length, config.maxConnections);
+                for(let i = 0; i < connectCount; i++) {
+                    const b = distances[i].index;
+                    const distance = distances[i].distance;
+                    
+                    if(particles[a].connections < config.maxConnections && 
+                       particles[b].connections < config.maxConnections) {
+                        
+                        particles[a].connections++;
+                        particles[b].connections++;
+                        
+                        const opacity = 1-(distance/config.lineDistance);
+                        drawSynapse(
+                            particles[a].x, particles[a].y, 
+                            particles[b].x, particles[b].y, 
+                            opacity
+                        );
+                    }
+                }
+            }
+        }
+        
+        // Desenho de sinapses otimizado
+        function drawSynapse(x1, y1, x2, y2, opacity) {
+            const baseColor = `rgba(255, 255, 255, ${opacity * 0.4})`;
+            
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            const midX = (x1 + x2)/2 + (Math.random() - 0.5) * 15;
+            const midY = (y1 + y2)/2 + (Math.random() - 0.5) * 15;
+            
+            const distance = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+            const divisions = Math.floor(distance/30);
+            
+            if(Math.random() < 0.6) {
+                for(let i = 1; i < divisions; i++) {
+                    const t = i/divisions;
+                    const px = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 5;
+                    const py = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 5;
+                    
+                    const dotSize = Math.random() * config.synapseRadius * 0.8;
+                    const dotOpacity = opacity * 0.5 + Math.random() * 0.3;
+                    
+                    ctx.fillStyle = `rgba(255, 255, 255, ${dotOpacity})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, dotSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            if(Math.random() < 0.01) {
+                const pulsePos = Math.random();
+                const px = x1 + (x2 - x1) * pulsePos;
+                const py = y1 + (y2 - y1) * pulsePos;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(px, py, config.synapseRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(px, py, config.synapseRadius * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Animação otimizada
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for(let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            
+            connect();
+            requestAnimationFrame(animate);
+        }
+        
+        // Botão flutuante com base no scroll
+        const floatingBtn = document.getElementById('floatingBtn');
+        window.addEventListener('scroll', function() {
+            const firstSectionHeight = window.innerHeight;
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if(scrollPosition > firstSectionHeight * 0.7) {
+                floatingBtn.style.opacity = '1';
+                floatingBtn.style.visibility = 'visible';
+            } else {
+                floatingBtn.style.opacity = '0';
+                floatingBtn.style.visibility = 'hidden';
+            }
+        });
+        
+        // Handlers para modais
+        const signupModal = document.getElementById('signupModal');
+        const loginModal = document.getElementById('loginModal');
+        const signupForm = document.getElementById('signupForm');
+        const loginForm = document.getElementById('loginForm');
+        const allButtons = document.querySelectorAll('.btn-primary, .btn.btn-primary, #floatingBtn');
+        const loginBtn = document.querySelector('.btn-secondary');
+        const closeButtons = document.querySelectorAll('.close-modal');
+        
+        // Abrir modal de cadastro
+        allButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                signupModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+        
+        // Abrir modal de login
+        loginBtn.addEventListener('click', function() {
+            loginModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        
+        // Fechar modais
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                signupModal.classList.remove('active');
+                loginModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                resetModals();
+            });
+        });
+        
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function(event) {
+            if (event.target === signupModal) {
+                signupModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                resetModals();
+            }
+            if (event.target === loginModal) {
+                loginModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                resetModals();
+            }
+        });
+        
+        // Resetar modais para estado inicial
+        function resetModals() {
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('signupLoading').style.display = 'none';
+            document.getElementById('signupMessage').style.display = 'none';
+            
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('loginLoading').style.display = 'none';
+            document.getElementById('loginMessage').style.display = 'none';
+        }
+        
+        // Gerenciar submissão do formulário de cadastro
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            // Esconder formulário e mostrar carregamento
+            signupForm.style.display = 'none';
+            document.getElementById('signupLoading').style.display = 'flex';
+            
+            // Enviar dados para webhook
+            fetch(config.webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email: email, 
+                    password: password 
+                }),
+            })
+            .then(response => {
+                console.log('Webhook response:', response);
+                // Continuar com o fluxo mesmo que o webhook falhe
+                setTimeout(function() {
+                    document.getElementById('signupLoading').style.display = 'none';
+                    document.getElementById('signupMessage').style.display = 'block';
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error sending to webhook:', error);
+                // Continuar com o fluxo mesmo em caso de erro
+                setTimeout(function() {
+                    document.getElementById('signupLoading').style.display = 'none';
+                    document.getElementById('signupMessage').style.display = 'block';
+                }, 2000);
+            });
+        });
+        
+        // Gerenciar submissão do formulário de login
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Esconder formulário e mostrar carregamento
+            loginForm.style.display = 'none';
+            document.getElementById('loginLoading').style.display = 'flex';
+            
+            // Simular carregamento por 2 segundos
+            setTimeout(function() {
+                document.getElementById('loginLoading').style.display = 'none';
+                document.getElementById('loginMessage').style.display = 'block';
+            }, 2000);
+        });
+        
+        // Inicialização e configuração de elementos interativos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar luzes ao robô
+            const scene = document.querySelector('.scene');
+            if(scene) {
+                for(let i = 0; i < 20; i++) {
+                    const light = document.createElement('div');
+                    light.classList.add('light');
+                    light.style.left = Math.random() * 240 + 'px';
+                    light.style.top = Math.random() * 320 + 'px';
+                    light.style.animationDelay = Math.random() * 3 + 's';
+                    scene.appendChild(light);
+                }
+            }
+            
+            // Função otimizada para criar dentes das engrenagens
+            function createGearTeeth(selector, numTeeth, radius, size) {
+                const teethContainer = document.querySelector(selector);
+                if(!teethContainer) return;
+                
+                const fragment = document.createDocumentFragment();
+                for(let i = 0; i < numTeeth; i++) {
+                    const angle = (i/numTeeth) * 2 * Math.PI;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    
+                    const tooth = document.createElement('div');
+                    tooth.classList.add('gear-tooth', size);
+                    
+                    const toothSize = size === 'large' ? 12 : 8;
+                    tooth.style.left = `${radius + x - toothSize}px`;
+                    tooth.style.top = `${radius + y - toothSize}px`;
+                    tooth.style.transform = `rotate(${angle * (180/Math.PI)}deg)`;
+                    
+                    fragment.appendChild(tooth);
+                }
+                teethContainer.appendChild(fragment);
+            }
+            
+            // Criar dentes das engrenagens
+            createGearTeeth('.gear-teeth-container.large', 16, 80, 'large');
+            createGearTeeth('.gear-teeth-container.small', 10, 45, 'small');
+            
+            // Criar elementos do portal
+            const portalParticles = document.getElementById('portalParticles');
+            if(portalParticles) {
+                for(let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('portal-particle');
+                    particle.style.left = Math.random() * 220 + 'px';
+                    particle.style.top = Math.random() * 220 + 'px';
+                    particle.style.animationDelay = Math.random() * 4 + 's';
+                    portalParticles.appendChild(particle);
+                }
+                
+                for(let i = 0; i < 6; i++) {
+                    const beam = document.createElement('div');
+                    beam.classList.add('portal-beam');
+                    beam.style.top = 110 + 'px';
+                    beam.style.left = 110 + 'px';
+                    beam.style.transform = `rotate(${i * 60}deg)`;
+                    beam.style.animationDelay = `${i * 0.5}s`;
+                    portalParticles.appendChild(beam);
+                }
+            }
+            
+            // Adicionar estrelas ao portal
+            const portalStars = document.getElementById('portalStars');
+            if(portalStars) {
+                for(let i = 0; i < 40; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('portal-star');
+                    
+                    // Posicionar estrelas em coordenadas polares para concentrá-las no centro
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * Math.random() * 70; // Quadrático para concentrar no centro
+                    const x = Math.cos(angle) * distance + 70;
+                    const y = Math.sin(angle) * distance + 70;
+                    
+                    star.style.left = x + 'px';
+                    star.style.top = y + 'px';
+                    star.style.opacity = Math.random() * 0.8 + 0.2;
+                    
+                    // Tamanho variado das estrelas
+                    const size = Math.random() * 2 + 1;
+                    star.style.width = size + 'px';
+                    star.style.height = size + 'px';
+                    
+                    // Brilho variado
+                    star.style.boxShadow = `0 0 ${Math.random() * 4 + 2}px rgba(255,255,255,${Math.random() * 0.5 + 0.3})`;
+                    
+                    portalStars.appendChild(star);
+                }
+            }
+            
+            // Rotação de mensagens no balão do robô
+            const messages = [
+                "Seu copiloto médico a postos!", 
+                "Interface conversacional adaptativa", 
+                "Ferramentas médicas em tempo real", 
+                "Protocolos e evidências atualizadas",
+                "Fluxogramas e calculadoras",
+                "Insights baseados em evidências",
+                "Aumento de produtividade",
+                "Decisões com mais confiança"
+            ];
+            
+            const chatBubble = document.querySelector('.robot .chat-bubble');
+            if(chatBubble) {
+                let currentMessage = 0;
+                
+                setInterval(() => {
+                    chatBubble.style.opacity = 0;
+                    setTimeout(() => {
+                        currentMessage = (currentMessage + 1) % messages.length;
+                        chatBubble.textContent = messages[currentMessage];
+                        chatBubble.style.opacity = 1;
+                    }, 500);
+                }, 3000);
+                
+                // Piscar os olhos
+                const eyes = document.querySelectorAll('.eye');
+                setInterval(() => {
+                    eyes.forEach(eye => {
+                        eye.style.opacity = 0;
+                        setTimeout(() => eye.style.opacity = 1, 200);
+                    });
+                }, 5000);
+            }
+            
+            // Configurar o relógio
+            const clockHourMarks = document.querySelector('.clock-hour-marks');
+            if(clockHourMarks) {
+                const fragment = document.createDocumentFragment();
+                for(let i = 0; i < 12; i++) {
+                    const hourMark = document.createElement('div');
+                    hourMark.classList.add('hour-mark');
+                    hourMark.style.transform = `rotate(${i * 30}deg)`;
+                    fragment.appendChild(hourMark);
+                    
+                    for(let j = 1; j < 5; j++) {
+                        const minuteMark = document.createElement('div');
+                        minuteMark.classList.add('hour-mark', 'hour-mark-small');
+                        minuteMark.style.transform = `rotate(${i * 30 + j * 6}deg)`;
+                        fragment.appendChild(minuteMark);
+                    }
+                }
+                clockHourMarks.appendChild(fragment);
+                
+                // Animar o relógio
+                const hourHand = document.querySelector('.hour-hand');
+                const minuteHand = document.querySelector('.minute-hand');
+                const secondHand = document.querySelector('.second-hand');
+                
+                function updateClock() {
+                    const now = new Date();
+                    const hours = now.getHours() % 12;
+                    const minutes = now.getMinutes();
+                    const seconds = now.getSeconds();
+                    
+                    const hourAngle = (hours * 30) + (minutes * 0.5);
+                    const minuteAngle = (minutes * 6) + (seconds * 0.1);
+                    const secondAngle = seconds * 6;
+                    
+                    hourHand.style.transform = `rotate(${hourAngle}deg)`;
+                    minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+                    secondHand.style.transform = `rotate(${secondAngle}deg)`;
+                }
+                
+                updateClock();
+                setInterval(updateClock, 1000);
+            }
+        });
+        
+        // Inicializar Canvas e partículas
+        resizeCanvas();
+        init();
+        animate();
+        
+        }); // Fim do DOMContentLoaded
+    </script>
+</body>
+</html>
